@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Video Summary Extension",
   "description": "Use Alt+Q to open Gemini and submit a summary prompt for the current video URL.",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "permissions": ["tabs", "notifications", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -17,7 +17,7 @@
       "suggested_key": {
         "default": "Alt+Q"
       },
-      "description": "현재 탭 영상 URL로 Gemini 요약 요청 보내기"
+      "description": "Send a Gemini summary request for the current video URL from the active tab."
     }
   },
   "content_scripts": [

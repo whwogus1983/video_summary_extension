@@ -24,6 +24,7 @@ const I18N = {
     languageLabel: '요약 언어',
     meta1: '실행 단축키는 Alt+Q로 고정입니다.',
     meta2: '요약 언어만 이 화면에서 변경할 수 있습니다.',
+    versionLabel: '버전',
     statusLanguageSaved: '언어 설정을 저장했습니다.'
   },
   en: {
@@ -32,6 +33,7 @@ const I18N = {
     languageLabel: 'Summary language',
     meta1: 'Shortcut is fixed to Alt+Q.',
     meta2: 'Only summary language can be changed here.',
+    versionLabel: 'Version',
     statusLanguageSaved: 'Language setting saved.'
   }
 };
@@ -85,6 +87,11 @@ function languageLabel(language) {
   return dict[language] || language;
 }
 
+function renderVersionText() {
+  const version = chrome.runtime.getManifest().version;
+  document.getElementById('versionText').textContent = `${t('versionLabel')}: ${version}`;
+}
+
 function applyUiLocale(uiLocale) {
   currentUiLocale = uiLocale;
   document.documentElement.lang = uiLocale;
@@ -94,6 +101,7 @@ function applyUiLocale(uiLocale) {
   document.getElementById('languageLabel').textContent = t('languageLabel');
   document.getElementById('meta1').textContent = t('meta1');
   document.getElementById('meta2').textContent = t('meta2');
+  renderVersionText();
 }
 
 function buildLanguageOptions(selectEl, selected) {

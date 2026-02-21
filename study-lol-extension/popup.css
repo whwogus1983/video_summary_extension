@@ -71,6 +71,10 @@ body {
   color: var(--ok);
 }
 
+.status.outside-card {
+  margin: -2px 2px 10px;
+}
+
 .muted { background: #f8fafc; }
 
 .meta {
