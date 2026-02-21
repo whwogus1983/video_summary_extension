@@ -1,19 +1,23 @@
 ﻿{
   "manifest_version": 3,
-  "name": "Study.lol Bridge",
-  "description": "Alt + Q로 현재 영상 URL을 study.lol로 열고 알림을 보냅니다.",
-  "version": "0.1.0",
+  "name": "Video Summary Extension",
+  "description": "Use Alt+Q to open Gemini and submit a summary prompt for the current video URL.",
+  "version": "0.5.0",
   "permissions": ["tabs", "notifications", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_title": "Video Summary Settings",
+    "default_popup": "popup.html"
+  },
   "commands": {
-    "open_study_lol": {
+    "open_gemini_summary": {
       "suggested_key": {
         "default": "Alt+Q"
       },
-      "description": "현재 탭 URL을 study.lol로 열기"
+      "description": "현재 탭 영상 URL로 Gemini 요약 요청 보내기"
     }
   },
   "content_scripts": [
@@ -24,9 +28,9 @@
     }
   ],
   "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/icon_loop.png",
+    "32": "icons/icon_loop.png",
+    "48": "icons/icon_loop.png",
+    "128": "icons/icon_loop.png"
   }
 }

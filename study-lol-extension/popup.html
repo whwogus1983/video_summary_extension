@@ -1,0 +1,30 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Video Summary Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="panel">
+    <header class="panel-header">
+      <h1 id="titleText">Video Summary</h1>
+      <p id="subtitleText">Gemini summary settings</p>
+    </header>
+
+    <section class="card">
+      <label id="languageLabel" for="summaryLanguage" class="label">요약 언어</label>
+      <select id="summaryLanguage" class="select"></select>
+      <p id="statusMessage" class="status"></p>
+    </section>
+
+    <section class="card muted">
+      <p id="meta1" class="meta">실행 단축키는 Alt+Q로 고정입니다.</p>
+      <p id="meta2" class="meta">요약 언어만 이 화면에서 변경할 수 있습니다.</p>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

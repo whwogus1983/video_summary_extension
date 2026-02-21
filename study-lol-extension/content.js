@@ -1,122 +1,111 @@
 ﻿(() => {
-  const MODAL_ID = 'study-lol-modal';
-
-  function removeModal() {
-    const existing = document.getElementById(MODAL_ID);
-    if (existing) existing.remove();
+  async function wait(ms) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function createBaseModal(titleText, messageText) {
-    removeModal();
+  function setPromptToElement(el, prompt) {
+    if (!el) return false;
 
-    if (!document.body) {
-      alert(messageText);
-      return null;
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+      el.focus();
+      el.value = prompt;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
     }
 
-    const overlay = document.createElement('div');
-    overlay.id = MODAL_ID;
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 2147483647;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    `;
-
-    const box = document.createElement('div');
-    box.style.cssText = `
-      width: min(92vw, 440px);
-      background: #fff;
-      color: #111;
-      border-radius: 12px;
-      padding: 18px 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    `;
-
-    const title = document.createElement('h3');
-    title.textContent = titleText;
-    title.style.cssText = 'margin:0 0 10px 0; font-size:16px;';
-
-    const text = document.createElement('p');
-    text.textContent = messageText;
-    text.style.cssText = 'margin:0 0 14px 0; font-size:14px; line-height:1.45;';
-
-    const buttonRow = document.createElement('div');
-    buttonRow.style.cssText = 'display:flex; gap:8px; justify-content:flex-end;';
-
-    box.appendChild(title);
-    box.appendChild(text);
-    box.appendChild(buttonRow);
-    overlay.appendChild(box);
-
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) removeModal();
-    });
-
-    document.body.appendChild(overlay);
-    return { buttonRow };
-  }
-
-  function makeButton(label, styleType, onClick) {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-
-    const palette = styleType === 'primary'
-      ? 'background:#111; color:#fff;'
-      : 'background:#f1f3f5; color:#111;';
-
-    btn.style.cssText = `
-      border: none;
-      ${palette}
-      border-radius: 8px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 13px;
-    `;
-    btn.addEventListener('click', onClick);
-    return btn;
-  }
-
-  function showErrorModal(message) {
-    const modal = createBaseModal('Study.lol Bridge', message);
-    if (!modal) return;
-
-    modal.buttonRow.appendChild(
-      makeButton('확인', 'primary', removeModal)
-    );
-  }
-
-  function showSummaryCompleteModal(message, studyTabId) {
-    const modal = createBaseModal('Study.lol Bridge', message);
-    if (!modal) return;
-
-    const moveBtn = makeButton('해당 탭으로 이동', 'primary', () => {
-      chrome.runtime.sendMessage({ type: 'FOCUS_STUDY_TAB', studyTabId }, () => {
-        removeModal();
-      });
-    });
-
-    const okBtn = makeButton('확인', 'secondary', removeModal);
-
-    modal.buttonRow.appendChild(moveBtn);
-    modal.buttonRow.appendChild(okBtn);
-  }
-
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg?.type === 'SHOW_ERROR') {
-      showErrorModal(msg.message || '요청을 처리할 수 없습니다.');
-      return;
+    if (el.isContentEditable) {
+      el.focus();
+      el.textContent = '';
+      const inserted = document.execCommand('insertText', false, prompt);
+      if (!inserted) {
+        el.textContent = prompt;
+      }
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertText' }));
+      return true;
     }
 
-    if (msg?.type === 'SHOW_SUMMARY_COMPLETE') {
-      showSummaryCompleteModal(
-        msg.message || '요약 생성이 완료되었습니다.',
-        msg.studyTabId
-      );
+    return false;
+  }
+
+  function findGeminiInput() {
+    const selectors = [
+      'div[role="textbox"][contenteditable="true"]',
+      'rich-textarea div[contenteditable="true"]',
+      'textarea[aria-label]',
+      'textarea'
+    ];
+
+    for (const selector of selectors) {
+      const el = document.querySelector(selector);
+      if (el) return el;
+    }
+
+    return null;
+  }
+
+  function findGeminiSendButton() {
+    const selectors = [
+      'button[aria-label*="Send" i]',
+      'button[aria-label*="전송" i]',
+      'button[data-test-id="send-button"]',
+      'button.send-button'
+    ];
+
+    for (const selector of selectors) {
+      const btn = document.querySelector(selector);
+      if (btn && !btn.disabled) return btn;
+    }
+
+    return null;
+  }
+
+  async function submitPrompt(inputEl) {
+    for (let i = 0; i < 16; i += 1) {
+      const sendBtn = findGeminiSendButton();
+      if (sendBtn) {
+        sendBtn.click();
+        return true;
+      }
+      await wait(200);
+    }
+
+    inputEl.focus();
+    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
+    inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', code: 'Enter', bubbles: true }));
+    inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true }));
+
+    return true;
+  }
+
+  async function autoSubmitGeminiPrompt(prompt) {
+    const MAX_WAIT_MS = 30000;
+    const STEP_MS = 500;
+    const maxStep = Math.floor(MAX_WAIT_MS / STEP_MS);
+
+    for (let i = 0; i < maxStep; i += 1) {
+      const inputEl = findGeminiInput();
+      if (inputEl && setPromptToElement(inputEl, prompt)) {
+        await wait(250);
+
+        const submitted = await submitPrompt(inputEl);
+        if (!submitted) {
+          return { ok: false, reason: 'submit_failed' };
+        }
+
+        return { ok: true };
+      }
+
+      await wait(STEP_MS);
+    }
+
+    return { ok: false, reason: 'composer_not_found' };
+  }
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg?.type === 'AUTO_SUBMIT_GEMINI_PROMPT') {
+      autoSubmitGeminiPrompt(msg.prompt || '').then((result) => sendResponse(result));
+      return true;
     }
   });
 })();
