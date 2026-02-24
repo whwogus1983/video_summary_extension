@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Video Summary Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <img src="icons/icon_loop.png" alt="extension icon" class="header-icon">
+      <h1>Video Summary Extension</h1>
+      <a class="howto" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">How to use this extension</a>
+    </header>
+
+    <section class="panel two-col">
+      <div class="field">
+        <label for="openImmediately">Open page immediately</label>
+        <select id="openImmediately">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="shortSummary">Short Summary</label>
+        <select id="shortSummary">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="field field-wide">
+        <label for="summaryLanguage">Language</label>
+        <select id="summaryLanguage"></select>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="field">
+        <label for="promptTemplate">Prompt</label>
+        <p class="hint">Use <code>{videoUrl}</code> placeholder to include the current video URL.</p>
+        <textarea id="promptTemplate" rows="9"></textarea>
+      </div>
+    </section>
+
+    <section class="panel help-panel">
+      <h2>Help / Support</h2>
+      <p>Support email: <a href="mailto:support@videosummaryextension.app">support@videosummaryextension.app</a></p>
+      <p>Guide: <a href="https://github.com" target="_blank" rel="noopener noreferrer">https://github.com</a></p>
+      <button id="restoreDefaults" class="ghost" type="button">Restore Default Options</button>
+    </section>
+
+    <footer class="footer">
+      <p id="statusMessage" class="status"></p>
+      <button id="saveOptions" class="primary" type="button">Save</button>
+    </footer>
+  </main>
+
+  <script src="options.js"></script>
+</body>
+</html>

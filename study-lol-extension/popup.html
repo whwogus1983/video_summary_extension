@@ -1,32 +1,19 @@
-﻿<!doctype html>
-<html lang="en">
+<!doctype html>
+<html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Video Summary Settings</title>
+  <title>Video Summary</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <main class="panel">
-    <header class="panel-header">
-      <h1 id="titleText">Video Summary</h1>
-      <p id="subtitleText">Gemini summary settings</p>
-    </header>
-
-    <section class="card">
-      <label id="languageLabel" for="summaryLanguage" class="label">Summary language</label>
-      <select id="summaryLanguage" class="select"></select>
-    </section>
-
-    <p id="statusMessage" class="status outside-card"></p>
-
-    <section class="card muted">
-      <p id="meta1" class="meta">Shortcut is fixed to Alt+Q.</p>
-      <p id="meta2" class="meta">Only summary language can be changed here.</p>
-      <p id="versionText" class="meta">Version: 1.0.0</p>
-    </section>
+    <img src="icons/icon_loop.png" alt="extension icon" class="logo">
+    <h1>Video Summary Extension</h1>
+    <p>Open settings to configure language and prompt options.</p>
+    <button id="openSettings" class="button" type="button">Open Settings</button>
+    <p class="hint">Shortcut is fixed to Alt+Q.</p>
   </main>
-
   <script src="popup.js"></script>
 </body>
 </html>
