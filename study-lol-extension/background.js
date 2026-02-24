@@ -1,4 +1,4 @@
-const AI_APP_URLS = {
+﻿const AI_APP_URLS = {
   gemini: 'https://gemini.google.com/app',
   gpt: 'https://chatgpt.com/',
   claude: 'https://claude.ai/chats'
@@ -162,7 +162,7 @@ function notify(locale, messageText, titleKey = 'appTitle', focusTabId = null) {
 
   chrome.notifications.create(notificationId, {
     type: 'basic',
-    iconUrl: 'icons/icon_loop.png',
+    iconUrl: 'icons/icon_title.png',
     title: message(locale, titleKey),
     message: messageText,
     buttons: [
