@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Video Summary Extension",
   "description": "Use Alt+Q to open Gemini and submit a summary prompt for the current video URL.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "permissions": ["tabs", "notifications", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
