@@ -93,6 +93,16 @@ textarea {
   line-height: 1.5;
 }
 
+#fixedPrompt {
+  background: #f8fafc;
+  color: #475467;
+  border-style: dashed;
+}
+
+#includeSection {
+  border-color: #93c5fd;
+}
+
 .hint {
   margin: 0;
   color: var(--subtle);

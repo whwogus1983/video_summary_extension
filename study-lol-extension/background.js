@@ -9,7 +9,7 @@ const PENDING_KEY = 'pendingAiTabs';
 const SUMMARY_LANGUAGE_KEY = 'summaryLanguage';
 const SHORT_SUMMARY_KEY = 'shortSummaryEnabled';
 const OPEN_PAGE_IMMEDIATELY_KEY = 'openPageImmediately';
-const CUSTOM_PROMPTS_KEY = 'customPromptsByLanguage';
+const CUSTOM_INCLUDE_KEY = 'customIncludeByLanguage';
 const DEFAULT_SUMMARY_LANGUAGE = 'English';
 const COMMAND_NAME = 'open_gemini_summary';
 
@@ -81,18 +81,9 @@ function isSupportedAiUrl(rawUrl) {
   }
 }
 
-function defaultPromptTemplate(language, isShortSummary) {
-  const shortLine = isShortSummary
-    ? 'Keep it short and focused in 3-5 bullet points.'
-    : 'Provide enough detail to understand key ideas.';
-
+function defaultIncludeSection(language) {
   if (language === 'Korean') {
     return [
-      '다음 영상 URL을 요약해 주세요: {videoUrl}',
-      '',
-      '반드시 한국어로 답변해 주세요.',
-      shortLine,
-      '아래 형식으로 작성해 주세요:',
       '1) 전체 요약',
       '2) 핵심 포인트',
       '3) 실천 가능한 인사이트',
@@ -101,11 +92,6 @@ function defaultPromptTemplate(language, isShortSummary) {
   }
 
   return [
-    `Summarize the video from this URL: {videoUrl}`,
-    '',
-    `Write the full response in ${language}.`,
-    shortLine,
-    'Please include:',
     '1) A concise overall summary',
     '2) Key points as bullet points',
     '3) Actionable takeaways',
@@ -113,8 +99,30 @@ function defaultPromptTemplate(language, isShortSummary) {
   ].join('\n');
 }
 
-function buildSummaryPrompt(videoUrl, template) {
-  return template.replaceAll('{videoUrl}', videoUrl);
+function buildSummaryPrompt(videoUrl, language, isShortSummary, includeSection) {
+  const shortLine = isShortSummary
+    ? 'Keep it short and focused in 3-5 bullet points.'
+    : 'Provide enough detail to understand key ideas.';
+
+  if (language === 'Korean') {
+    return [
+      `다음 영상 URL을 요약해 주세요: ${videoUrl}`,
+      '',
+      '반드시 한국어로 답변해 주세요.',
+      shortLine,
+      'Please include:',
+      includeSection
+    ].join('\n');
+  }
+
+  return [
+    `Summarize the video from this URL: ${videoUrl}`,
+    '',
+    `Write the full response in ${language}.`,
+    shortLine,
+    'Please include:',
+    includeSection
+  ].join('\n');
 }
 
 async function getSettings() {
@@ -122,17 +130,16 @@ async function getSettings() {
     SUMMARY_LANGUAGE_KEY,
     SHORT_SUMMARY_KEY,
     OPEN_PAGE_IMMEDIATELY_KEY,
-    CUSTOM_PROMPTS_KEY
+    CUSTOM_INCLUDE_KEY
   ]);
 
   const summaryLanguage = data[SUMMARY_LANGUAGE_KEY] || DEFAULT_SUMMARY_LANGUAGE;
   const shortSummaryEnabled = Boolean(data[SHORT_SUMMARY_KEY] ?? false);
   const openPageImmediately = Boolean(data[OPEN_PAGE_IMMEDIATELY_KEY] ?? false);
-  const customPrompts = data[CUSTOM_PROMPTS_KEY] || {};
+  const customInclude = data[CUSTOM_INCLUDE_KEY] || {};
+  const includeSection = customInclude[summaryLanguage] || defaultIncludeSection(summaryLanguage);
 
-  const template = customPrompts[summaryLanguage] || defaultPromptTemplate(summaryLanguage, shortSummaryEnabled);
-
-  return { summaryLanguage, shortSummaryEnabled, openPageImmediately, template };
+  return { summaryLanguage, shortSummaryEnabled, openPageImmediately, includeSection };
 }
 
 async function getActiveTab() {
@@ -179,6 +186,7 @@ async function addPendingAiTab(aiTabId, sourceTabId, prompt, locale) {
     sourceTabId,
     prompt,
     locale,
+    notifyOnSubmitted: true,
     createdAt: Date.now(),
     submitted: false
   };
@@ -232,10 +240,12 @@ async function triggerAiAutoSubmit(aiTabId, pending, attempt = 0) {
       }
 
       await patchPendingAiTab(aiTabId, { submitted: true, submittedAt: Date.now() });
-      setTimeout(() => {
-        const locale = pending.locale || 'en';
-        notify(locale, message(locale, 'submitted'), 'summaryDoneTitle', aiTabId);
-      }, 3000);
+      if (pending.notifyOnSubmitted !== false) {
+        setTimeout(() => {
+          const locale = pending.locale || 'en';
+          notify(locale, message(locale, 'submitted'), 'summaryDoneTitle', aiTabId);
+        }, 3000);
+      }
       await removePendingAiTab(aiTabId);
     }
   );
@@ -251,7 +261,12 @@ async function handleSummaryFromTab(tab) {
     return;
   }
 
-  const prompt = buildSummaryPrompt(currentUrl, settings.template);
+  const prompt = buildSummaryPrompt(
+    currentUrl,
+    settings.summaryLanguage,
+    settings.shortSummaryEnabled,
+    settings.includeSection
+  );
   const aiUrl = AI_APP_URLS[DEFAULT_AI_TARGET] || AI_APP_URLS.gemini;
   const aiTab = await chrome.tabs.create({
     url: aiUrl,
@@ -260,6 +275,7 @@ async function handleSummaryFromTab(tab) {
 
   if (aiTab?.id) {
     await addPendingAiTab(aiTab.id, tab.id, prompt, locale);
+    await patchPendingAiTab(aiTab.id, { notifyOnSubmitted: !settings.openPageImmediately });
   }
 }
 

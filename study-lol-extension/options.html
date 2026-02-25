@@ -11,7 +11,7 @@
     <header class="header">
       <img src="icons/icon_title.png" alt="extension icon" class="header-icon">
       <h1>Video Summary Extension</h1>
-      <a class="howto" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">How to use this extension</a>
+      <!-- <a class="howto" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">How to use this extension</a> -->
     </header>
 
     <section class="panel two-col">
@@ -39,16 +39,18 @@
 
     <section class="panel">
       <div class="field">
-        <label for="promptTemplate">Prompt</label>
-        <p class="hint">Use <code>{videoUrl}</code> placeholder to include the current video URL.</p>
-        <textarea id="promptTemplate" rows="9"></textarea>
+        <label for="fixedPrompt">Fixed prompt</label>
+        <p class="hint">This section is fixed by settings and cannot be edited.</p>
+        <textarea id="fixedPrompt" rows="8" readonly></textarea>
+      </div>
+      <div class="field">
+        <label for="includeSection">Editable section</label>
+        <p class="hint">Only this section is editable and saved per language.</p>
+        <textarea id="includeSection" rows="8"></textarea>
       </div>
     </section>
 
     <section class="panel help-panel">
-      <h2>Help / Support</h2>
-      <p>Support email: <a href="mailto:support@videosummaryextension.app">support@videosummaryextension.app</a></p>
-      <p>Guide: <a href="https://github.com" target="_blank" rel="noopener noreferrer">https://github.com</a></p>
       <button id="restoreDefaults" class="ghost" type="button">Restore Default Options</button>
     </section>
 

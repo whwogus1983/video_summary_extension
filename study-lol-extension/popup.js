@@ -1,15 +1,9 @@
-const SETTINGS_WINDOW_WIDTH = 980;
-const SETTINGS_WINDOW_HEIGHT = 780;
-
-function openSettingsWindow() {
+function openSettingsTab() {
   const url = chrome.runtime.getURL('options.html');
-  chrome.windows.create({
+  chrome.tabs.create({
     url,
-    type: 'popup',
-    width: SETTINGS_WINDOW_WIDTH,
-    height: SETTINGS_WINDOW_HEIGHT,
-    focused: true
+    active: true
   });
 }
 
-document.getElementById('openSettings').addEventListener('click', openSettingsWindow);
+document.getElementById('openSettings').addEventListener('click', openSettingsTab);

@@ -2,7 +2,7 @@ const STORAGE_KEYS = {
   language: 'summaryLanguage',
   shortSummary: 'shortSummaryEnabled',
   openImmediately: 'openPageImmediately',
-  customPrompts: 'customPromptsByLanguage'
+  customInclude: 'customIncludeByLanguage'
 };
 
 const DEFAULTS = {
@@ -31,7 +31,25 @@ const LANGUAGES = [
   'Vietnamese'
 ];
 
-function defaultPromptTemplate(language, isShort) {
+function defaultIncludeSection(language) {
+  if (language === 'Korean') {
+    return [
+      '1) 전체 요약',
+      '2) 핵심 포인트',
+      '3) 실천 가능한 인사이트',
+      '4) 추론한 내용이 있으면 명확히 표시'
+    ].join('\n');
+  }
+
+  return [
+    '1) A concise overall summary',
+    '2) Key points as bullet points',
+    '3) Actionable takeaways',
+    '4) If something is inferred, clearly state it'
+  ].join('\n');
+}
+
+function buildFixedPromptPreview(language, isShort) {
   const shortLine = isShort
     ? 'Keep it short and focused in 3-5 bullet points.'
     : 'Provide enough detail to understand key ideas.';
@@ -42,24 +60,18 @@ function defaultPromptTemplate(language, isShort) {
       '',
       '반드시 한국어로 답변해 주세요.',
       shortLine,
-      '아래 형식으로 작성해 주세요:',
-      '1) 전체 요약',
-      '2) 핵심 포인트',
-      '3) 실천 가능한 인사이트',
-      '4) 추론한 내용이 있으면 명확히 표시'
+      'Please include:',
+      '[Editable section below]'
     ].join('\n');
   }
 
   return [
-    `Summarize the video from this URL: {videoUrl}`,
+    'Summarize the video from this URL: {videoUrl}',
     '',
     `Write the full response in ${language}.`,
     shortLine,
     'Please include:',
-    '1) A concise overall summary',
-    '2) Key points as bullet points',
-    '3) Actionable takeaways',
-    '4) If something is inferred, clearly state it'
+    '[Editable section below]'
   ].join('\n');
 }
 
@@ -70,7 +82,7 @@ async function loadSettings() {
     language: data[STORAGE_KEYS.language] || DEFAULTS.language,
     shortSummary: Boolean(data[STORAGE_KEYS.shortSummary] ?? DEFAULTS.shortSummary),
     openImmediately: Boolean(data[STORAGE_KEYS.openImmediately] ?? DEFAULTS.openImmediately),
-    customPrompts: data[STORAGE_KEYS.customPrompts] || {}
+    customInclude: data[STORAGE_KEYS.customInclude] || {}
   };
 }
 
@@ -79,7 +91,7 @@ async function saveSettings(next) {
     [STORAGE_KEYS.language]: next.language,
     [STORAGE_KEYS.shortSummary]: next.shortSummary,
     [STORAGE_KEYS.openImmediately]: next.openImmediately,
-    [STORAGE_KEYS.customPrompts]: next.customPrompts
+    [STORAGE_KEYS.customInclude]: next.customInclude
   });
 }
 
@@ -104,7 +116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const languageSelect = document.getElementById('summaryLanguage');
   const shortSummarySelect = document.getElementById('shortSummary');
   const openImmediatelySelect = document.getElementById('openImmediately');
-  const promptTextarea = document.getElementById('promptTemplate');
+  const fixedPromptTextarea = document.getElementById('fixedPrompt');
+  const includeSectionTextarea = document.getElementById('includeSection');
 
   let state = await loadSettings();
 
@@ -112,20 +125,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   shortSummarySelect.value = state.shortSummary ? 'yes' : 'no';
   openImmediatelySelect.value = state.openImmediately ? 'yes' : 'no';
 
-  function syncPromptField() {
+  function syncFields() {
     const language = languageSelect.value;
-    const shortSummary = shortSummarySelect.value === 'yes';
-    promptTextarea.value = state.customPrompts[language] || defaultPromptTemplate(language, shortSummary);
+    const isShort = shortSummarySelect.value === 'yes';
+
+    fixedPromptTextarea.value = buildFixedPromptPreview(language, isShort);
+    includeSectionTextarea.value = state.customInclude[language] || defaultIncludeSection(language);
   }
 
-  syncPromptField();
+  syncFields();
 
   languageSelect.addEventListener('change', () => {
-    syncPromptField();
+    syncFields();
   });
 
   shortSummarySelect.addEventListener('change', () => {
-    syncPromptField();
+    syncFields();
   });
 
   document.getElementById('saveOptions').addEventListener('click', async () => {
@@ -134,14 +149,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       language: selectedLanguage,
       shortSummary: shortSummarySelect.value === 'yes',
       openImmediately: openImmediatelySelect.value === 'yes',
-      customPrompts: {
-        ...state.customPrompts,
-        [selectedLanguage]: promptTextarea.value.trim() || defaultPromptTemplate(selectedLanguage, shortSummarySelect.value === 'yes')
+      customInclude: {
+        ...state.customInclude,
+        [selectedLanguage]: includeSectionTextarea.value.trim() || defaultIncludeSection(selectedLanguage)
       }
     };
 
     await saveSettings(next);
     state = next;
+    syncFields();
     showStatus('Saved.');
   });
 
@@ -150,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       language: DEFAULTS.language,
       shortSummary: DEFAULTS.shortSummary,
       openImmediately: DEFAULTS.openImmediately,
-      customPrompts: {}
+      customInclude: {}
     };
 
     await saveSettings(next);
@@ -159,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateLanguageOptions(state.language);
     shortSummarySelect.value = state.shortSummary ? 'yes' : 'no';
     openImmediatelySelect.value = state.openImmediately ? 'yes' : 'no';
-    syncPromptField();
+    syncFields();
     showStatus('Restored default options.');
   });
 });
